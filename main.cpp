@@ -3,7 +3,8 @@
 
 using BYTE = unsigned char;
 using WORD = unsigned short;
-using LONG = unsigned long;
+using LONG =unsigned long;
+using STATUS = bool;
 
 struct CPU
 {
@@ -29,13 +30,59 @@ struct CPU
 
     BYTE* RAM = (BYTE*)malloc(4194304);
 
-    
+    BYTE read_byte(LONG address)
+    {
+        return RAM[address];
+    }
+    WORD read_word(LONG address)
+    {
+        return (RAM[address]<<8) | RAM[address+1];
+    }
+    LONG read_long(LONG address)
+    {
+        return ((RAM[address]<<24) | (RAM[address+1]<<16)) | ((RAM[address+2]<<8) | RAM[address+3]);
+    }
+
+    void write_byte(LONG address = 0, BYTE value = 0)
+    {
+        RAM[address]=value;
+    }
+    void write_word(LONG address = 0, WORD value = 0)
+    {
+        RAM[address]=value & 0xFF00;
+        RAM[address+1]=value & 0x00FF;
+    }
+    void write_long(LONG address = 0, LONG value = 0)
+    {
+        RAM[address]=value & 0xFF000000;
+        RAM[address+1]=value & 0x00FF0000;
+        RAM[address+2]=value & 0x0000FF00;
+        RAM[address+3]=value & 0x000000FF;
+    }
+
+    BYTE INS_ABCD_B(BYTE reg_ret = 0, LONG destination = 0, BYTE value = 0)
+    {
+        if (reg_ret==0) return reg_ret + value + X;
+        else write_byte(read_byte(destination)+value);
+    }
+    BYTE INS_ABCD_W(BYTE reg_ret = 0, LONG destination = 0, WORD value = 0)
+    {
+        if (reg_ret==0) return reg_ret + value + X;
+        else write_word(read_word(destination)+value);
+    }
+    BYTE INS_ABCD_L(BYTE reg_ret = 0, LONG destination = 0, LONG value = 0)
+    {
+        if (reg_ret==0) return reg_ret + value + X;
+        else write_long(read_long(destination)+value);
+    }
 };
 
 
 int main()
 {
     CPU cpu;
+
+    cpu.write_byte(NULL, 4);
 
     free((void*)cpu.RAM);
     cpu.RAM = NULL;
